@@ -3,26 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>GWA Calculator - PL/DL Official</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
+<body class="bg-gray-100 p-4 md:p-8 font-sans">
+    <div class="max-w-5xl mx-auto">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2 text-center">GWA & Honor Status Calculator 🎓</h1>
+        <p class="text-center text-gray-600 mb-8">Automated PL/DL Checking Logic</p>
 
-    <div class="bg-white p-6 rounded-lg shadow-md mb-6">
-    <h2 class="text-xl font-semibold mb-4">Add New Subject</h2>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <input type="text" id="subject-name" placeholder="Subject (e.g. Math)" 
-               class="border p-2 rounded focus:outline-blue-500">
-        
-        <input type="number" id="subject-grade" placeholder="Grade (e.g. 1.25)" step="0.01"
-               class="border p-2 rounded focus:outline-blue-500">
-        
-        <input type="number" id="subject-units" placeholder="Units (e.g. 3)" 
-               class="border p-2 rounded focus:outline-blue-500">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-1">
+                <div class="bg-white p-6 rounded-xl shadow-md sticky top-8">
+                    <h2 class="text-xl font-semibold mb-4 text-blue-600">Add Subject</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Subject Name</label>
+                            <input type="text" id="subject-name" placeholder="e.g. Math 101" class="w-full border p-2 rounded mt-1">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Final Grade</label>
+                            <input type="number" id="subject-grade" placeholder="e.g. 1.2538" step="0.0001" class="w-full border p-2 rounded mt-1">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Units</label>
+                            <input type="number" id="subject-units" placeholder="e.g. 3" class="w-full border p-2 rounded mt-1">
+                        </div>
+                        <button id="add-btn" class="w-full bg-blue-600 text-white px-4 py-3 rounded-lg font-bold hover:bg-blue-700 transition">Add to Record</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2 space-y-6">
+                <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-gray-50 text-gray-700 uppercase text-xs">
+                            <tr>
+                                <th class="px-6 py-3 border-b">Subject</th>
+                                <th class="px-6 py-3 border-b text-center">Grade</th>
+                                <th class="px-6 py-3 border-b text-center">Units</th>
+                                <th class="px-6 py-3 border-b text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body" class="text-gray-600 divide-y divide-gray-100">
+                            </tbody>
+                    </table>
+                </div>
+
+                <div class="bg-white p-8 rounded-xl shadow-xl flex flex-col md:flex-row justify-between items-center border-t-8 border-blue-900">
+                    <div class="text-center md:text-left mb-4 md:mb-0">
+                        <p class="text-gray-500 uppercase tracking-widest text-sm font-semibold">Computed GWA</p>
+                        <h2 id="display-gwa" class="text-5xl font-black text-gray-800">0.00</h2>
+                    </div>
+                    <div class="text-center md:text-right">
+                        <p class="text-gray-500 uppercase tracking-widest text-sm font-semibold mb-2">Remark / Distinction</p>
+                        <div id="status-label" class="inline-block px-6 py-2 rounded-full text-white font-bold bg-gray-400">
+                            ---
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <button id="add-btn" class="mt-4 bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">
-        Add Subject
-    </button>
-</div>
-    
+
+    <script>
+        const subjects = [];
+        const addBtn = document.getElementById('add-btn');
+
+        addBtn.addEventListener('click', () => {
+            const name = document.getElementById('subject-name').value;
+            const grade = parseFloat(document.getElementById('subject-grade').value);
+            const units = parseFloat(document.getElementById('subject-units').value);
+
+            if (name && !isNaN(grade) && !isNaN(units)) {
+                subjects.push({ name, grade, units });
+                updateUI();
+                clearInputs();
+            }
+        });
+
+        function updateUI() {
+            const tableBody = document.getElementById('table-body');
+            tableBody.innerHTML = '';
+            
+            let totalWeightedGrades = 0;
+            let totalUnits = 0;
+            let hasAnyDQ = false;
+
+            subjects.forEach(s => {
+                totalWeightedGrades += (s.grade * s.units);
+                totalUnits += s.units;
+                
+                // AUTOMATIC DQ: If grade is > 3.00, it's an automatic DQ
+                let isSubjectDQ = s.grade > 3.00;
+                if (isSubjectDQ) hasAnyDQ = true;
+
+                const row = document.createElement('tr');
+                if (isSubjectDQ) row.className = "bg-red-50"; 
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 font-medium">${s.name}</td>
+                    <td class="px-6 py-4 text-center">${s.grade.toFixed(4)}</td>
+                    <td class="px-6 py-4 text-center">${s.units}</td>
+                    <td class="px-6 py-4 text-center">
+                        ${isSubjectDQ ? '<span class="text-red-600 font-bold">DQ</span>' : '<span class="text-green-600">OK</span>'}
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+
+            if (totalUnits > 0) {
+                const rawGwa = totalWeightedGrades / totalUnits;
+                const step1 = Number(rawGwa.toFixed(3));
+                const finalGwa = Number(step1.toFixed(2));
+
+                document.getElementById('display-gwa').innerText = finalGwa.toFixed(2);
+                
+                // Update Label Logic
+                const statusInfo = getHonorStatus(finalGwa, hasAnyDQ);
+                const label = document.getElementById('status-label');
+                label.innerText = statusInfo.text;
+                label.className = `inline-block px-6 py-2 rounded-full text-white font-bold ${statusInfo.color}`;
+            }
+        }
+
+        function getHonorStatus(gwa, isDisqualified) {
+            if (isDisqualified) {
+                return { text: "DISQUALIFIED (DQ) 🚩", color: "bg-red-600" };
+            }
+            // Based on your instructions: 1.000 - 1.25 is PL
+            if (gwa >= 1.00 && gwa <= 1.25) {
+                return { text: "President's List (PL) 🏆", color: "bg-green-500" };
+            }
+            // 1.26 - 1.75 is DL
+            if (gwa > 1.25 && gwa <= 1.75) {
+                return { text: "Dean's List (DL) ⭐", color: "bg-green-500" };
+            }
+            return { text: "Regular Standing", color: "bg-gray-500" };
+        }
+
+        function clearInputs() {
+            document.getElementById('subject-name').value = '';
+            document.getElementById('subject-grade').value = '';
+            document.getElementById('subject-units').value = '';
+        }
+    </script>
 </body>
 </html>
