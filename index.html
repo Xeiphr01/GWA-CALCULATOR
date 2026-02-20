@@ -9,11 +9,7 @@
     <script>
         tailwind.config = {
             darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
-                }
-            }
+            theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } }
         }
     </script>
     <style>
@@ -21,76 +17,94 @@
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #6366f1; border-radius: 10px; }
         .glass { backdrop-filter: blur(12px); }
         .active-tab { background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.4); }
+        .sidebar-transition { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
     </style>
 </head>
-<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-200 h-screen overflow-hidden transition-colors duration-300 font-sans">
-    <div class="flex h-full">
-        
-        <aside class="w-72 border-r border-slate-200 dark:border-slate-800 flex flex-col bg-white dark:bg-slate-900/50 glass z-20">
-            <div class="p-8">
-                <div class="flex items-center justify-between">
-                    <h1 class="text-2xl font-black tracking-tighter dark:text-white flex items-center gap-2">
-                        <span class="bg-indigo-600 text-white p-1 rounded">GWA</span> PRO
-                    </h1>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-200 h-screen overflow-hidden transition-colors duration-300 font-sans text-sm">
+
+<div id="sidebar-overlay" class="fixed inset-0 bg-slate-900/50 z-30 hidden lg:hidden" onclick="toggleSidebar()"></div>
+
+<div class="flex h-full relative">
+    <aside id="sidebar" class="fixed inset-y-0 left-0 w-72 border-r border-slate-200 dark:border-slate-800 flex flex-col bg-white dark:bg-slate-900 glass z-40 -translate-x-full lg:translate-x-0 lg:static sidebar-transition">
+        <div class="p-8">
+            <div class="flex items-center justify-between">
+                <h1 class="text-2xl font-black tracking-tighter dark:text-white flex items-center gap-2">
+                    <span class="bg-indigo-600 text-white p-1 rounded">GWA</span> PRO
+                </h1>
+                <div class="flex gap-2">
                     <button id="theme-toggle" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">
                         <span id="theme-icon">🌙</span>
                     </button>
+                    <button onclick="toggleSidebar()" class="lg:hidden p-2 text-slate-500">✕</button>
                 </div>
-                <p id="student-counter" class="text-[10px] text-slate-500 font-bold mt-4 uppercase tracking-widest">0 Profiles Registered</p>
             </div>
-            
-            <div class="px-6 mb-6">
-                <input type="text" id="new-student-name" onblur="this.value = formatName(this.value)" placeholder="Student Name..."
-                       class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all mb-3 text-slate-900 dark:text-white">
-                <button id="add-student-btn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white p-3 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg transition-all active:scale-95">
-                    + Initialize Profile
+
+            <div class="flex items-center justify-between mt-6 p-2 bg-slate-100/50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-800">
+                <span id="mode-label" class="text-[10px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400 ml-2">Ranked Mode</span>
+                <button id="rank-toggle" onclick="toggleRankMode()" class="relative inline-flex h-6 w-11 items-center rounded-full bg-indigo-600 transition-colors focus:outline-none">
+                    <span id="toggle-dot" class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-6"></span>
                 </button>
             </div>
+            <p id="student-counter" class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-4 ml-1">0 Profiles Registered</p>
+        </div>
 
-            <nav id="student-tabs" class="flex-1 overflow-y-auto px-4 space-y-2 custom-scrollbar pb-8"></nav>
-        </aside>
+        <div class="px-6 mb-6">
+            <input type="text" id="new-student-name" onblur="this.value = formatText(this.value)" placeholder="Student Name..."
+                class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all mb-3 text-slate-900 dark:text-white font-semibold">
+            <button id="add-student-btn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white p-3 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg transition-all active:scale-95">
+                + Initialize Profile
+            </button>
+        </div>
 
-        <main class="flex-1 flex flex-col relative overflow-hidden bg-white dark:bg-transparent">
-            <header id="active-header" class="hidden p-10 flex justify-between items-end border-b border-slate-200 dark:border-slate-800/50">
-                <div>
-                    <p class="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em] mb-1">Academic Rank</p>
-                    <h2 id="active-student-name" class="text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-none">---</h2>
-                    <p class="text-slate-500 dark:text-slate-400 mt-3 flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Profile Active
-                    </p>
-                </div>
-                <div class="flex gap-8 items-center bg-slate-50 dark:bg-slate-900/40 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 glass shadow-sm">
-                    <div class="text-right">
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Aggregate GWA</p>
-                        <div id="active-gwa" class="text-5xl font-black text-slate-900 dark:text-white">0.00</div>
-                    </div>
-                    <div id="active-status" class="px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest min-w-[100px] text-center">---</div>
-                </div>
-            </header>
+        <nav id="student-tabs" class="flex-1 overflow-y-auto px-4 space-y-2 custom-scrollbar pb-8"></nav>
+    </aside>
 
-            <div id="welcome-screen" class="flex-1 flex flex-col items-center justify-center text-center p-10">
-                <div class="w-24 h-24 bg-indigo-500/10 rounded-full flex items-center justify-center mb-6 border border-indigo-500/20">
-                    <span class="text-4xl">📚</span>
-                </div>
-                <h2 class="text-3xl font-black text-slate-900 dark:text-white uppercase">Executive GWA Portal</h2>
-                <p class="text-slate-500 mt-2 max-w-sm">Select a profile to begin verification.</p>
+    <main class="flex-1 flex flex-col relative overflow-hidden bg-white dark:bg-transparent">
+        <div class="lg:hidden p-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900 glass">
+            <button onclick="toggleSidebar()" class="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg">☰</button>
+            <h1 class="font-black text-sm tracking-tighter">GWA PRO</h1>
+            <div class="w-10"></div>
+        </div>
+
+        <header id="active-header" class="hidden p-6 lg:p-10 flex flex-col lg:flex-row lg:justify-between lg:items-end border-b border-slate-200 dark:border-slate-800/50 gap-6">
+            <div>
+                <p class="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em] mb-1">Academic Profile</p>
+                <h2 id="active-student-name" class="text-3xl lg:text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-none">---</h2>
+                <p class="text-slate-500 dark:text-slate-400 mt-2 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Profile Active
+                </p>
             </div>
+            <div class="flex gap-4 lg:gap-8 items-center bg-slate-50 dark:bg-slate-900/40 p-4 lg:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 glass shadow-sm">
+                <div class="text-right">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Aggregate GWA</p>
+                    <div id="active-gwa" class="text-3xl lg:text-5xl font-black text-slate-900 dark:text-white">0.00</div>
+                </div>
+                <div id="active-status" class="px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest min-w-[80px] text-center">---</div>
+            </div>
+        </header>
 
-            <div id="grade-content" class="hidden flex-1 overflow-y-auto p-10 custom-scrollbar">
-                <div class="grid grid-cols-12 gap-10">
-                    <div class="col-span-12 lg:col-span-4 bg-slate-50 dark:bg-slate-900/50 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 glass h-fit">
-                        <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-6 uppercase tracking-widest text-xs text-indigo-600 dark:text-indigo-400">Add Subject Record</h3>
-                        <div class="space-y-4">
-                            <input type="text" id="sub-name" placeholder="Subject Title" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white">
-                            <div class="grid grid-cols-2 gap-4">
-                                <input type="number" id="sub-grade" placeholder="Grade" step="0.0001" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white">
-                                <input type="number" id="sub-units" placeholder="Units" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white">
-                            </div>
-                            <button id="add-subject-btn" class="w-full bg-indigo-600 dark:bg-white text-white dark:text-slate-950 p-4 rounded-xl font-black uppercase text-xs tracking-widest hover:opacity-90 transition-all active:scale-95">Confirm Entry</button>
+        <div id="welcome-screen" class="flex-1 flex flex-col items-center justify-center text-center p-10">
+            <div class="w-20 h-20 bg-indigo-500/10 rounded-full flex items-center justify-center mb-6 border border-indigo-500/20 text-3xl">📚</div>
+            <h2 class="text-2xl font-black text-slate-900 dark:text-white uppercase">Executive GWA Portal</h2>
+            <p class="text-slate-500 mt-2 max-w-sm text-sm">Select or create a student profile to begin grading.</p>
+        </div>
+
+        <div id="grade-content" class="hidden flex-1 overflow-y-auto p-6 lg:p-10 custom-scrollbar">
+            <div class="grid grid-cols-12 gap-6 lg:gap-10">
+                <div class="col-span-12 lg:col-span-4 bg-slate-50 dark:bg-slate-900/50 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 glass h-fit">
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-6 uppercase tracking-widest text-xs text-indigo-600 dark:text-indigo-400">Add Subject Record</h3>
+                    <div class="space-y-4" id="subject-form">
+                        <input type="text" id="sub-name" onblur="this.value = formatText(this.value)" placeholder="Subject Title" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white font-semibold">
+                        <div class="grid grid-cols-2 gap-4">
+                            <input type="number" id="sub-grade" placeholder="Grade" step="0.0001" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white">
+                            <input type="number" id="sub-units" placeholder="Units" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white">
                         </div>
+                        <button id="add-subject-btn" class="w-full bg-indigo-600 dark:bg-white text-white dark:text-slate-950 p-4 rounded-xl font-black uppercase text-xs tracking-widest hover:opacity-90 transition-all active:scale-95">Confirm Entry</button>
                     </div>
-                    <div class="col-span-12 lg:col-span-8 bg-slate-50 dark:bg-slate-900/20 rounded-3xl border border-slate-200 dark:border-slate-800/50 overflow-hidden glass shadow-sm">
-                        <table class="w-full text-sm">
+                </div>
+                <div class="col-span-12 lg:col-span-8 bg-slate-50 dark:bg-slate-900/20 rounded-3xl border border-slate-200 dark:border-slate-800/50 overflow-hidden glass shadow-sm">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm min-w-[500px]">
                             <thead class="bg-slate-100 dark:bg-slate-900/50">
                                 <tr>
                                     <th class="p-5 text-left text-[10px] uppercase tracking-widest text-slate-400">Subject</th>
@@ -104,196 +118,190 @@
                     </div>
                 </div>
             </div>
-        </main>
-    </div>
+        </div>
+    </main>
+</div>
 
-    <script>
-        const html = document.documentElement;
-        const themeToggle = document.getElementById('theme-toggle');
-        const themeIcon = document.getElementById('theme-icon');
+<script>
+let students = [];
+try { students = JSON.parse(localStorage.getItem('gwa_premium_data')) || []; } catch(e){ students = []; }
+let activeStudentId = null;
+let isRankedMode = true;
 
-        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            html.classList.add('dark');
-            themeIcon.innerText = '☀️';
-        }
+// THEME
+const html = document.documentElement;
+const themeIcon = document.getElementById('theme-icon');
+if(localStorage.getItem('theme')==='dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)){
+    html.classList.add('dark'); themeIcon.innerText='☀️';
+}
+document.getElementById('theme-toggle').addEventListener('click', ()=>{
+    html.classList.toggle('dark');
+    const isDark = html.classList.contains('dark');
+    themeIcon.innerText = isDark?'☀️':'🌙';
+    localStorage.setItem('theme', isDark?'dark':'light');
+});
 
-        themeToggle.addEventListener('click', () => {
-            html.classList.toggle('dark');
-            const isDark = html.classList.contains('dark');
-            themeIcon.innerText = isDark ? '☀️' : '🌙';
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
-        });
+// UTILS
+function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('-translate-x-full'); document.getElementById('sidebar-overlay').classList.toggle('hidden'); }
+function formatText(text){ return text.trim().replace(/\s+/g,' ').toLowerCase().split(' ').map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(' ');}
+function saveData(){ localStorage.setItem('gwa_premium_data', JSON.stringify(students)); }
 
-        let students = JSON.parse(localStorage.getItem('gwa_premium_data')) || [];
-        let activeIndex = null;
-
-        function saveData() { localStorage.setItem('gwa_premium_data', JSON.stringify(students)); }
-
-        function formatName(name) {
-    return name
-        .trim()
-        .replace(/\s+/g, ' ')
-        .toLowerCase()
-        .split(' ')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
+// RANK TOGGLE
+function toggleRankMode(){
+    isRankedMode=!isRankedMode;
+    const dot=document.getElementById('toggle-dot');
+    const btn=document.getElementById('rank-toggle');
+    const label=document.getElementById('mode-label');
+    dot.style.transform = isRankedMode?'translateX(1.5rem)':'translateX(0.25rem)';
+    btn.style.backgroundColor = isRankedMode?'#6366f1':'#d1d5db';
+    label.innerText = isRankedMode?'Ranked Mode':'Standard Mode';
+    renderTabs();
 }
 
-        document.getElementById('add-student-btn').onclick = () => {
-    const el = document.getElementById('new-student-name');
-    const rawName = el.value.trim();
-
-    if (rawName === '') return;
-
-    const formattedName = formatName(rawName);
-
-    // 🔒 DUPLICATE CHECK (case-insensitive)
-    const alreadyExists = students.some(s => 
-        s.name.toLowerCase() === formattedName.toLowerCase()
-    );
-
-    if (alreadyExists) {
-        alert("Student profile already exists.");
-        return;
-    }
-
-    students.push({ 
-        name: formattedName, 
-        subjects: [], 
-        gwa: 0, 
-        status: 'Regular', 
-        hasDQ: false 
-    });
-
-    el.value = '';
-    saveData();
-    renderTabs();
+// STUDENT MANAGEMENT
+document.getElementById('add-student-btn').onclick = ()=>{
+    const el=document.getElementById('new-student-name');
+    const name=formatText(el.value);
+    if(!name) return;
+    if(students.some(s=>s.name.toLowerCase()===name.toLowerCase())){ alert("Profile already exists."); return;}
+    students.push({id:Date.now(), name:name, subjects:[], gwa:0, step1:0, status:'Regular'});
+    el.value='';
+    saveData(); renderTabs();
 };
 
-        function renderTabs() {
-            const container = document.getElementById('student-tabs');
-            container.innerHTML = '';
-            document.getElementById('student-counter').innerText = `${students.length} Profiles Registered`;
-            students.forEach((s, i) => {
-                const statusColor = (s.status.includes('PL') || s.status.includes('DL')) ? 'bg-green-500' : (s.status === 'DQ' ? 'bg-red-500' : 'bg-slate-400 dark:bg-slate-700');
-                const div = document.createElement('div');
-                div.className = `group flex flex-col p-4 rounded-2xl cursor-pointer transition-all mb-2 ${activeIndex === i ? 'active-tab text-white' : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-100 dark:border-transparent shadow-sm'}`;
-                div.onclick = (e) => { if(e.target.tagName !== 'BUTTON') setActive(i); };
-                div.innerHTML = `
-                    <div class="flex justify-between items-center w-full">
-                        <span class="text-sm font-semibold truncate flex-1">${s.name}</span>
-                        <button onclick="delStudent(${i})" class="ml-2 text-xs opacity-40 hover:opacity-100 transition-opacity">✕</button>
-                    </div>
-                    <div class="mt-2 flex items-center justify-between">
-                        <span class="text-[9px] font-black uppercase tracking-widest opacity-60">Final GWA: ${s.gwa.toFixed(2)}</span>
-                        <span class="px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter text-white ${statusColor}">${s.status}</span>
-                    </div>
-                `;
-                container.appendChild(div);
-            });
-        }
+function renderTabs(){
+    const container=document.getElementById('student-tabs');
+    container.innerHTML='';
+    document.getElementById('student-counter').innerText = `${students.length} Profiles Registered`;
+    
+    let displayList=[...students];
+    
+    // Stable Ranking Logic: Sort by GWA, then Alphabetically to prevent jumping
+    if(isRankedMode) {
+        displayList.sort((a, b) => {
+            if (a.gwa === 0 && b.gwa === 0) return a.name.localeCompare(b.name);
+            if (a.gwa === 0) return 1;
+            if (b.gwa === 0) return -1;
+            if (a.gwa !== b.gwa) return a.gwa - b.gwa;
+            return a.name.localeCompare(b.name);
+        });
+    } else {
+        displayList.sort((a, b) => a.name.localeCompare(b.name));
+    }
+    
+    displayList.forEach((s, i) => {
+        const isActive = activeStudentId === s.id;
+        const statusColor = s.status === 'PL' || s.status === 'DL' ? 'bg-green-500' : (s.status === 'DQ' ? 'bg-red-500' : 'bg-slate-400 dark:bg-slate-700');
+        const medal = isRankedMode && s.gwa > 0 ? (i === 0 ? '🥇 ' : i === 1 ? '🥈 ' : i === 2 ? '🥉 ' : '') : '';
+        
+        const div=document.createElement('div');
+        div.className=`group flex flex-col p-4 rounded-2xl cursor-pointer transition-all mb-2 ${isActive?'active-tab text-white':'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-100 dark:border-transparent shadow-sm'}`;
+        div.onclick=(e)=>{ if(e.target.tagName!=='BUTTON'){ setActive(s.id); if(window.innerWidth<1024) toggleSidebar(); } };
+        div.innerHTML=`<div class="flex justify-between items-center w-full">
+            <div class="flex flex-col"><span class="text-[8px] font-black uppercase opacity-70 mb-0.5">${isRankedMode && s.gwa > 0 ? `Rank #${i+1}` : 'Student Profile'}</span>
+            <span class="text-sm font-bold truncate flex-1 font-semibold">${medal}${s.name}</span></div>
+            <button onclick="event.stopPropagation(); delStudent(${s.id})" class="ml-2 opacity-40 hover:opacity-100 font-bold p-1">✕</button></div>
+            <div class="mt-2 flex items-center justify-between">
+            <span class="text-[9px] font-black uppercase tracking-widest opacity-60">Final GWA: ${s.gwa > 0 ? s.gwa.toFixed(2) : 'N/A'}</span>
+            <span class="px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter text-white ${statusColor}">${s.status}</span></div>`;
+        container.appendChild(div);
+    });
+}
 
-        function setActive(i) {
-            if (activeIndex === i) { resetUI(); } else {
-                activeIndex = i;
-                document.getElementById('welcome-screen').classList.add('hidden');
-                document.getElementById('active-header').classList.remove('hidden');
-                document.getElementById('grade-content').classList.remove('hidden');
-                renderTabs();
-                updateGradeUI();
-            }
-        }
+function setActive(id){
+    activeStudentId=id;
+    document.getElementById('welcome-screen').classList.add('hidden');
+    document.getElementById('active-header').classList.remove('hidden');
+    document.getElementById('grade-content').classList.remove('hidden');
+    renderTabs(); updateGradeUI();
+}
 
-        function resetUI() {
-            activeIndex = null;
-            document.getElementById('welcome-screen').classList.remove('hidden');
-            document.getElementById('active-header').classList.add('hidden');
-            document.getElementById('grade-content').classList.add('hidden');
-            renderTabs();
-        }
+function delStudent(id){
+    if(confirm('Erase this student profile?')){
+        if(activeStudentId===id){ activeStudentId=null; resetMainUI(); }
+        students=students.filter(s=>s.id!==id); saveData(); renderTabs();
+    }
+}
 
-        function delStudent(i) {
-            if (confirm('Delete Profile?')) {
-                if (activeIndex === i) resetUI();
-                students.splice(i, 1);
-                saveData();
-                renderTabs();
-            }
-        }
+function resetMainUI(){
+    document.getElementById('welcome-screen').classList.remove('hidden');
+    document.getElementById('active-header').classList.add('hidden');
+    document.getElementById('grade-content').classList.remove('hidden');
+}
 
-        document.getElementById('add-subject-btn').onclick = () => {
-            const n = document.getElementById('sub-name'), g = document.getElementById('sub-grade'), u = document.getElementById('sub-units');
-            if (n.value && g.value) {
-                students[activeIndex].subjects.push({ 
-                    name: n.value, 
-                    grade: parseFloat(g.value), 
-                    units: parseFloat(u.value) || 0
-                });
-                n.value = ''; g.value = ''; u.value = '';
-                updateGradeUI();
-                saveData();
-                renderTabs();
-            }
-        };
+// GRADING LOGIC
+const handleAddSubject = ()=>{
+    const n=document.getElementById('sub-name'), g=document.getElementById('sub-grade'), u=document.getElementById('sub-units');
+    const student = students.find(s=>s.id===activeStudentId);
+    if(n.value && g.value && student){
+        student.subjects.push({id:Date.now(), name:n.value, grade:parseFloat(g.value), units:parseFloat(u.value)||0});
+        n.value=''; g.value=''; u.value='';
+        updateGradeUI(); saveData(); renderTabs();
+        n.focus();
+    }
+};
 
-        function updateGradeUI() {
-            const s = students[activeIndex], body = document.getElementById('subject-table-body');
-            body.innerHTML = '';
-            let tw = 0, tu = 0, dqFound = false;
+document.getElementById('add-subject-btn').onclick = handleAddSubject;
+document.getElementById('subject-form').addEventListener('keypress', (e)=>{ if(e.key==='Enter') handleAddSubject(); });
 
-            s.subjects.forEach((sub, i) => {
-                tw += (sub.grade * sub.units); tu += sub.units;
-                
-                // Automatic DQ for honors: any grade > 2.0
-                const isHonorDQ = sub.grade > 2.0;
-                if (isHonorDQ) dqFound = true;
-                
-                // Automatic Pass/Fail: > 3.0 is a Fail
-                const isFailed = sub.grade > 3.0;
+function updateGradeUI(){
+    const s=students.find(st=>st.id===activeStudentId); if(!s) return;
+    const body=document.getElementById('subject-table-body'); body.innerHTML='';
+    let tw=0, tu=0, dqFound=false;
 
-                const row = document.createElement('tr');
-                row.className = `hover:bg-slate-100 dark:hover:bg-slate-800/20 transition-colors ${isHonorDQ ? 'bg-red-500/5 dark:bg-red-500/10' : ''}`;
-                row.innerHTML = `<td class="p-5 font-semibold text-slate-800 dark:text-slate-200">
-                                    <div class="flex items-center gap-2">
-                                        ${sub.name} 
-                                        ${isHonorDQ ? '<span class="text-[8px] bg-red-500 text-white px-1.5 py-0.5 rounded font-black">DQ</span>' : ''}
-                                    </div>
-                                 </td>
-                                 <td class="p-5 text-center text-indigo-600 dark:text-indigo-400 font-bold">${sub.grade.toFixed(2)}</td>
-                                 <td class="p-5 text-center">
-                                    <span class="px-2 py-0.5 rounded text-[9px] font-black uppercase ${isFailed ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'}">
-                                        ${isFailed ? 'FAILED' : 'PASSED'}
-                                    </span>
-                                 </td>
-                                 <td class="p-5 text-right"><button onclick="delSub(${i})" class="text-red-400 hover:text-red-600">✕</button></td>`;
-                body.appendChild(row);
-            });
+    s.subjects.forEach(sub=>{
+        tw+=(sub.grade*sub.units); tu+=sub.units;
+        const isHonorDQ = sub.grade > 2.0; // DQ Threshold
+        const isSubjectFailed = sub.grade > 3.0; // Failure Threshold
+        if(isHonorDQ) dqFound = true;
 
-            if (tu > 0) {
-                const rawGwa = tw / tu;
-                const step1 = Number(rawGwa.toFixed(3)); // Step 1: Round to 3 decimals
-                const finalGwa = Number(step1.toFixed(2)); // Step 2: Round result to 2 decimals
-                
-                s.gwa = finalGwa;
+        const row=document.createElement('tr');
+        row.className=`hover:bg-slate-100 dark:hover:bg-slate-800/20 transition-colors ${isHonorDQ ? 'bg-red-500/5 dark:bg-red-500/10' : ''}`;
+        row.innerHTML=`<td class="p-5 font-bold text-slate-800 dark:text-slate-200 uppercase text-[11px] tracking-wide">
+            ${sub.name} ${isHonorDQ ? '<span class="text-[8px] bg-red-500 text-white px-1.5 py-0.5 rounded ml-2 uppercase font-black tracking-tighter">Honor DQ</span>' : ''}</td>
+            <td class="p-5 text-center text-indigo-600 dark:text-indigo-400 font-black text-lg">${sub.grade.toFixed(2)}</td>
+            <td class="p-5 text-center">
+                <span class="px-2 py-0.5 rounded text-[9px] font-black uppercase ${isSubjectFailed ? 'bg-red-100 text-red-700 dark:bg-red-900/30' : 'bg-green-100 text-green-700 dark:bg-green-900/30'}">
+                    ${isSubjectFailed ? 'FAILED' : 'PASSED'}
+                </span>
+            </td>
+            <td class="p-5 text-right"><button onclick="delSub(${sub.id})" class="text-red-400 hover:text-red-600 font-bold p-2 transition-all">✕</button></td>`;
+        body.appendChild(row);
+    });
 
-                if (dqFound) s.status = 'DQ';
-                else if (step1 >= 1.000 && step1 <= 1.254) s.status = 'PL';
-                else if (step1 >= 1.255 && step1 <= 1.754) s.status = 'DL';
-                else s.status = 'Regular';
-            } else {
-                s.gwa = 0; s.status = 'Regular';
-            }
+    if(tu > 0){
+        // TWO-STEP ROUNDING PROCESS
+        const rawGwa = tw / tu;
+        const step1 = Number(rawGwa.toFixed(3)); 
+        const finalGwa = Number(step1.toFixed(2)); 
+        
+        s.gwa = finalGwa;
+        s.step1 = step1;
 
-            document.getElementById('active-student-name').innerText = s.name;
-            document.getElementById('active-gwa').innerText = s.gwa.toFixed(2);
-            const lbl = document.getElementById('active-status');
-            lbl.innerText = s.status;
-            const statusColor = (s.status.includes('PL') || s.status.includes('DL')) ? 'bg-green-500' : (s.status === 'DQ' ? 'bg-red-600 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300');
-            lbl.className = `px-4 py-2 rounded-lg text-xs font-black uppercase ${statusColor} ${s.status === 'PL' || s.status === 'DL' ? 'text-white' : ''}`;
-        }
+        // STATUS LOGIC
+        if(dqFound) s.status = 'DQ';
+        else if(step1 >= 1.000 && step1 <= 1.254) s.status = 'PL';
+        else if(step1 >= 1.255 && step1 <= 1.754) s.status = 'DL';
+        else s.status = 'Regular';
+    } else {
+        s.gwa = 0; s.step1 = 0; s.status = 'Regular';
+    }
 
-        function delSub(i) { students[activeIndex].subjects.splice(i, 1); updateGradeUI(); saveData(); renderTabs(); }
-        renderTabs();
-    </script>
+    document.getElementById('active-student-name').innerText = s.name;
+    document.getElementById('active-gwa').innerText = s.gwa > 0 ? s.gwa.toFixed(2) : "0.00";
+    const lbl = document.getElementById('active-status');
+    lbl.innerText = s.status;
+    
+    const isHonors = s.status === 'PL' || s.status === 'DL';
+    lbl.className = `px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest ${s.status === 'DQ' ? 'bg-red-600 text-white' : (isHonors ? 'bg-green-500 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300')}`;
+}
+
+function delSub(id){ 
+    const s=students.find(st=>st.id===activeStudentId); 
+    if(s){ s.subjects=s.subjects.filter(sub=>sub.id!==id); updateGradeUI(); saveData(); renderTabs(); }
+}
+
+renderTabs();
+</script>
 </body>
 </html>
