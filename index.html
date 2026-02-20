@@ -2,7 +2,7 @@
 <html lang="en" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>GWA Premium Executive Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
@@ -13,14 +13,21 @@
         }
     </script>
     <style>
+        /* Essential fix for mobile keyboard: use dynamic viewport height */
+        :root { --vh: 1vh; }
+        .h-viewport { height: calc(var(--vh) * 100); }
+        
         .custom-scrollbar::-webkit-scrollbar { width: 5px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #6366f1; border-radius: 10px; }
-        .glass { backdrop-filter: blur(12px); }
+        .glass { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
         .active-tab { background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.4); }
         .sidebar-transition { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        
+        /* Prevent body scroll when sidebar is open */
+        .no-scroll { overflow: hidden; position: fixed; width: 100%; }
     </style>
 </head>
-<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-200 h-screen overflow-hidden transition-colors duration-300 font-sans text-sm">
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-200 h-viewport overflow-hidden transition-colors duration-300 font-sans text-sm">
 
 <div id="sidebar-overlay" class="fixed inset-0 bg-slate-900/50 z-30 hidden lg:hidden" onclick="toggleSidebar()"></div>
 
@@ -89,20 +96,20 @@
             <p class="text-slate-500 mt-2 max-w-sm text-sm">Select or create a student profile to begin grading.</p>
         </div>
 
-        <div id="grade-content" class="hidden flex-1 overflow-y-auto p-6 lg:p-10 custom-scrollbar">
+        <div id="grade-content" class="hidden flex-1 overflow-y-auto p-4 lg:p-10 custom-scrollbar pb-32">
             <div class="grid grid-cols-12 gap-6 lg:gap-10">
-                <div class="col-span-12 lg:col-span-4 bg-slate-50 dark:bg-slate-900/50 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 glass h-fit">
+                <div class="col-span-12 lg:col-span-4 bg-slate-50 dark:bg-slate-900/50 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 glass h-fit shadow-md">
                     <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-6 uppercase tracking-widest text-xs text-indigo-600 dark:text-indigo-400">Add Subject Record</h3>
                     <div class="space-y-4" id="subject-form">
-                        <input type="text" id="sub-name" onblur="this.value = formatText(this.value)" placeholder="Subject Title" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white font-semibold">
+                        <input type="text" id="sub-name" onblur="this.value = formatText(this.value)" placeholder="Subject Title" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white font-semibold text-base">
                         <div class="grid grid-cols-2 gap-4">
-                            <input type="number" id="sub-grade" placeholder="Grade" step="0.0001" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white">
-                            <input type="number" id="sub-units" placeholder="Units" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white">
+                            <input type="number" pattern="[0-9]*" id="sub-grade" placeholder="Grade" step="0.0001" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white text-base">
+                            <input type="number" pattern="[0-9]*" id="sub-units" placeholder="Units" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white text-base">
                         </div>
-                        <button id="add-subject-btn" class="w-full bg-indigo-600 dark:bg-white text-white dark:text-slate-950 p-4 rounded-xl font-black uppercase text-xs tracking-widest hover:opacity-90 transition-all active:scale-95">Confirm Entry</button>
+                        <button id="add-subject-btn" class="w-full bg-indigo-600 dark:bg-white text-white dark:text-slate-950 p-4 rounded-xl font-black uppercase text-xs tracking-widest hover:opacity-90 transition-all active:scale-95 shadow-lg">Confirm Entry</button>
                     </div>
                 </div>
-                <div class="col-span-12 lg:col-span-8 bg-slate-50 dark:bg-slate-900/20 rounded-3xl border border-slate-200 dark:border-slate-800/50 overflow-hidden glass shadow-sm">
+                <div class="col-span-12 lg:col-span-8 bg-slate-50 dark:bg-slate-900/20 rounded-3xl border border-slate-200 dark:border-slate-800/50 overflow-hidden glass shadow-sm mb-10">
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm min-w-[500px]">
                             <thead class="bg-slate-100 dark:bg-slate-900/50">
@@ -123,6 +130,15 @@
 </div>
 
 <script>
+// Fix for Mobile Viewport Height
+const updateVH = () => {
+    let vh = window.innerHeight * 0.01;
+    document.documentElement.style.setProperty('--vh', `${vh}px`);
+};
+window.addEventListener('resize', updateVH);
+window.addEventListener('orientationchange', updateVH);
+updateVH();
+
 let students = [];
 try { students = JSON.parse(localStorage.getItem('gwa_premium_data')) || []; } catch(e){ students = []; }
 let activeStudentId = null;
@@ -142,9 +158,23 @@ document.getElementById('theme-toggle').addEventListener('click', ()=>{
 });
 
 // UTILS
-function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('-translate-x-full'); document.getElementById('sidebar-overlay').classList.toggle('hidden'); }
+function toggleSidebar(){ 
+    document.getElementById('sidebar').classList.toggle('-translate-x-full'); 
+    document.getElementById('sidebar-overlay').classList.toggle('hidden');
+    document.body.classList.toggle('no-scroll');
+}
+
 function formatText(text){ return text.trim().replace(/\s+/g,' ').toLowerCase().split(' ').map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(' ');}
 function saveData(){ localStorage.setItem('gwa_premium_data', JSON.stringify(students)); }
+
+// Scroll input into view when focused (iOS/Android fix)
+document.querySelectorAll('input').forEach(input => {
+    input.addEventListener('focus', () => {
+        setTimeout(() => {
+            input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 300);
+    });
+});
 
 // RANK TOGGLE
 function toggleRankMode(){
@@ -175,8 +205,6 @@ function renderTabs(){
     document.getElementById('student-counter').innerText = `${students.length} Profiles Registered`;
     
     let displayList=[...students];
-    
-    // Stable Ranking Logic: Sort by GWA, then Alphabetically to prevent jumping
     if(isRankedMode) {
         displayList.sort((a, b) => {
             if (a.gwa === 0 && b.gwa === 0) return a.name.localeCompare(b.name);
@@ -226,7 +254,7 @@ function delStudent(id){
 function resetMainUI(){
     document.getElementById('welcome-screen').classList.remove('hidden');
     document.getElementById('active-header').classList.add('hidden');
-    document.getElementById('grade-content').classList.remove('hidden');
+    document.getElementById('grade-content').classList.add('hidden');
 }
 
 // GRADING LOGIC
@@ -251,8 +279,8 @@ function updateGradeUI(){
 
     s.subjects.forEach(sub=>{
         tw+=(sub.grade*sub.units); tu+=sub.units;
-        const isHonorDQ = sub.grade > 2.0; // DQ Threshold
-        const isSubjectFailed = sub.grade > 3.0; // Failure Threshold
+        const isHonorDQ = sub.grade > 2.0; 
+        const isSubjectFailed = sub.grade > 3.0; 
         if(isHonorDQ) dqFound = true;
 
         const row=document.createElement('tr');
@@ -270,28 +298,21 @@ function updateGradeUI(){
     });
 
     if(tu > 0){
-        // TWO-STEP ROUNDING PROCESS
         const rawGwa = tw / tu;
         const step1 = Number(rawGwa.toFixed(3)); 
         const finalGwa = Number(step1.toFixed(2)); 
-        
         s.gwa = finalGwa;
         s.step1 = step1;
-
-        // STATUS LOGIC
         if(dqFound) s.status = 'DQ';
         else if(step1 >= 1.000 && step1 <= 1.254) s.status = 'PL';
         else if(step1 >= 1.255 && step1 <= 1.754) s.status = 'DL';
         else s.status = 'Regular';
-    } else {
-        s.gwa = 0; s.step1 = 0; s.status = 'Regular';
-    }
+    } else { s.gwa = 0; s.step1 = 0; s.status = 'Regular'; }
 
     document.getElementById('active-student-name').innerText = s.name;
     document.getElementById('active-gwa').innerText = s.gwa > 0 ? s.gwa.toFixed(2) : "0.00";
     const lbl = document.getElementById('active-status');
     lbl.innerText = s.status;
-    
     const isHonors = s.status === 'PL' || s.status === 'DL';
     lbl.className = `px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest ${s.status === 'DQ' ? 'bg-red-600 text-white' : (isHonors ? 'bg-green-500 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300')}`;
 }
